@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Excel to JSON Converter</title>
+</head>
+<body>
+  <button onclick="fetchAndConvert()">Convert Excel to JSON</button>
+  <pre id="jsonOutput"></pre>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.3/xlsx.full.min.js"></script>
+  <script>
+    async function fetchAndConvert() {
+      	const jsonOutput = document.getElementById('jsonOutput');
+	//const fileInput = document.getElementById('fileInput');
+      	//const file = fileInput.files[0];
+      	//const reader = new FileReader();
+
+//	reader.onload = function(event) {
+  //  	const data = new Uint8Array(event.target.result);
+    	const response = await fetch('./RawData.xlsx'); // Relative path to your Excel file
+    	const buffer = await response.arrayBuffer();
+	const workbook = XLSX.read(data, { type: 'array' });
+
+        const sheetName = workbook.SheetNames[1]; // Assuming data is in the first sheet
+        const sheet = workbook.Sheets[sheetName];
+        const jsonData = XLSX.utils.sheet_to_json(sheet, { header:1 });
+	console.log(sheetName);
+
+	console.log(jsonData);
+	
+        const formattedData = jsonData.map(entry => ({
+    	name: entry.Role, // Assuming the first column contains the role name
+	experience: entry.Experience,
+    	onsite: {
+        	min: entry['Onsite-Min'], // Assuming the second column contains the minimum rate for onsite
+        	max: entry['Onsite-Max'], // Assuming the third column contains the minimum rate for offshore
+		buyRate: entry['Onsite Cost'] // Assuming the fourth column contains the buy rate for onsite
+   	 },
+    	offshore: {
+       	 	min: entry['Offshore-Min'], // Assuming the fifth column contains the maximum rate for onsite
+        	max: entry['Offshore-Max'], // Assuming the sixth column contains the maximum rate for offshore
+		buyRate: entry['Offshore Cost'] // Assuming the seventh column contains the buy rate for offshore
+    	}
+	}));
+
+console.log(formattedData);
+	const customizedData = formattedData.map(entry => ({
+    	name: entry.name,
+	experience: entry.experience,
+    	onsite: {
+        	min: entry.onsite.min,
+		max: entry.onsite.max,
+        	buyRate: entry.onsite.buyRate
+    	},
+    	offshore: {
+        	min: entry.offshore.min,
+		max: entry.offshore.max,
+        	buyRate: entry.offshore.buyRate
+    	}
+	}));
+
+       console.log(customizedData);
+       const jsonString = JSON.stringify(customizedData, null, 2);
+	jsonOutput.textContent = jsonString;
+     
+
+      reader.readAsArrayBuffer(file);
+    }
+
+
+  </script>
+</body>
+</html>
